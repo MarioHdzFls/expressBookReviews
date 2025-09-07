@@ -10,27 +10,21 @@ app.use(express.json());
 
 app.use("/customer",session({secret:"fingerprint_customer",resave: true, saveUninitialized: true}))
 
-app.use("/customer/auth/*", function auth(req,res,next){
-//Write the authenication mechanism here
-    const authHeader = req.headers['authorization']; 
+app.use("/customer/auth/*", function auth(req, res, next) {
+    if (req.session.authorization) { // Comprueba si existe la sesión
+        let token = req.session.authorization['accessToken']; // Extrae el token de la sesión
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(403).json({
-            error: 'Acceso denegado. Se requiere un token.'
+        jwt.verify(token, "access", (err, user) => {
+            if (!err) {
+                req.user = user;
+                next(); // Si el token es válido, continúa
+            } else {
+                return res.status(403).json({ message: "Token de usuario no válido" });
+            }
         });
-    }
-
-    const token = authHeader.substring(7);
-
-    try {
-
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (error) {
-        return res.status(401).json({
-            error: 'Token inválido o expirado.'
-        });
+    } else {
+        // Si no hay sesión, deniega el acceso
+        return res.status(403).json({ message: "El usuario no ha iniciado sesión" });
     }
 });
  

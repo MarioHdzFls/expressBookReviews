@@ -31,6 +31,19 @@ public_users.get('/', function (req, res) {
     res.status(200).send(JSON.stringify(books, null, 4));
 });
 
+// Tarea 10: Obtener la lista de libros disponibles en la tienda (usando async-await)
+public_users.get('/', async function (req, res) {
+    try {
+        const getBooks = new Promise((resolve, reject) => {
+            resolve(books);
+        });
+        const allBooks = await getBooks;
+        return res.status(200).send(JSON.stringify(allBooks, null, 4));
+    } catch (error) {
+        return res.status(500).json({ message: "Error al obtener la lista de libros" });
+    }
+});
+
 // Tarea 2: Obtener detalles del libro basado en el ISBN
 public_users.get('/isbn/:isbn', function (req, res) {
     const isbn = req.params.isbn;
@@ -40,6 +53,23 @@ public_users.get('/isbn/:isbn', function (req, res) {
         return res.status(200).json(book);
     } else {
         return res.status(404).json({ message: "Libro no encontrado" });
+    }
+});
+
+// Tarea 11: Obtener detalles del libro basado en el ISBN (usando async-await)
+public_users.get('/isbn/:isbn', async function (req, res) {
+    const isbn = req.params.isbn;
+    try {
+        const book = await new Promise((resolve, reject) => {
+            resolve(books[isbn]);
+        });
+        if (book) {
+            return res.status(200).json(book);
+        } else {
+            return res.status(404).json({ message: "Libro no encontrado" });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: "Error al obtener detalles del libro por ISBN" });
     }
 });
 
@@ -62,6 +92,26 @@ public_users.get('/author/:author', function (req, res) {
     }
 });
 
+// Tarea 12: Obtener detalles del libro basado en el Autor (usando async-await)
+public_users.get('/author/:author', async function (req, res) {
+    const author = req.params.author.toLowerCase();
+    try {
+        const booksByAuthor = await new Promise((resolve, reject) => {
+            const allBooks = Object.values(books);
+            const filteredBooks = allBooks.filter(book => book.author.toLowerCase() === author);
+            resolve(filteredBooks);
+        });
+
+        if (booksByAuthor.length > 0) {
+            return res.status(200).json(booksByAuthor);
+        } else {
+            return res.status(404).json({ message: "No se encontraron libros de ese autor" });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: "Error al obtener libros por autor" });
+    }
+});
+
 // Tarea 4: Obtener todos los libros basados en el título
 public_users.get('/title/:title', function (req, res) {
     const title = req.params.title;
@@ -78,6 +128,26 @@ public_users.get('/title/:title', function (req, res) {
         return res.status(200).json(booksByTitle);
     } else {
         return res.status(404).json({ message: "No se encontraron libros con ese título" });
+    }
+});
+
+// Tarea 13: Obtener detalles del libro basado en el Título (usando async-await)
+public_users.get('/title/:title', async function (req, res) {
+    const title = req.params.title.toLowerCase();
+    try {
+        const booksByTitle = await new Promise((resolve, reject) => {
+            const allBooks = Object.values(books);
+            const filteredBooks = allBooks.filter(book => book.title.toLowerCase().includes(title));
+            resolve(filteredBooks);
+        });
+
+        if (booksByTitle.length > 0) {
+            return res.status(200).json(booksByTitle);
+        } else {
+            return res.status(404).json({ message: "No se encontraron libros con ese título" });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: "Error al obtener libros por título" });
     }
 });
 
